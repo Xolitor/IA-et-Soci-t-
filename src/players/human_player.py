@@ -1,33 +1,84 @@
-from players.player import Player
+from game.card import Card
 
-class HumanPlayer(Player):
+class HumanPlayer:
+    """Represents a human player in the Three for Ten game."""
+    
     def __init__(self, name):
-        super().__init__(name)
-
+        """
+        Initialize a new human player.
+        
+        Args:
+            name (str): The name of the player.
+        """
+        self.id = name
+        self.available_values = []
+    
+    def initialize_cards(self, card_values):
+        """
+        Set up the available card values for the player.
+        
+        Args:
+            card_values: Range or list of available values.
+        """
+        self.available_values = list(card_values)
+    
     def make_move(self, board):
+        """
+        Ask the human player for their move.
+        
+        Args:
+            board: The game board.
+            
+        Returns:
+            tuple: (card, row, col) representing the player's move.
+        """
+        print(f"\n{self.id}, it's your turn!")
+        
         while True:
             try:
-                move = input(f"{self.name}, enter your move (card number, row, column): ")
-                # Parse input - expecting format: "card_number row column"
-                parts = move.split()
-                if len(parts) != 3:
-                    print("Invalid input format. Please enter card number, row, and column separated by spaces.")
-                    continue
-                    
-                card_number = int(parts[0])
-                row = int(parts[1])
-                col = int(parts[2])
+                # Display available card values
+                print(f"Available card values: {', '.join(str(v) for v in self.available_values)}")
                 
-                # Validate the move
-                if not (1 <= card_number <= 8):
-                    print("Card number must be between 1 and 8.")
+                # Get card value from player - update prompt to show correct range
+                value = int(input(f"Enter card value ({min(self.available_values)}-{max(self.available_values)}): "))
+                if value not in self.available_values:
+                    print(f"Invalid value! Please choose one of: {self.available_values}")
                     continue
-                    
+                
+                card = Card(value)
+                
+                # Get row and column from player
+                row = int(input(f"Enter row (0-{board.size-1}): "))
+                col = int(input(f"Enter column (0-{board.size-1}): "))
+                
+                # Validate move
+                if not (0 <= row < board.size and 0 <= col < board.size):
+                    print(f"Position ({row}, {col}) is outside the board! Try again.")
+                    continue
+                
                 if not board.is_valid_move(row, col):
-                    print("Invalid position. Try again.")
+                    print(f"Position ({row}, {col}) is already occupied! Try again.")
                     continue
-                    
-                return card_number, row, col
                 
-            except ValueError:
-                print("Invalid input. Please enter numeric values.")
+                return card, row, col
+                
+            except ValueError as e:
+                if "Card value must be" in str(e):
+                    print(e)
+                else:
+                    print("Invalid input! Please enter a number.")
+    
+    def remove_card(self, card):
+        """
+        With unlimited cards, this method doesn't need to do anything.
+        """
+        pass
+    
+    def has_cards(self):
+        """
+        With unlimited cards, this method always returns True.
+        
+        Returns:
+            bool: Always True since players have unlimited cards.
+        """
+        return True

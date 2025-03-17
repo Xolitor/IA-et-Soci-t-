@@ -1,7 +1,17 @@
 # Three for Ten Game
 
 ## Overview
-The "3 for 10" game is a fun and engaging number placement game where players take turns placing cards numbered from 1 to 8 on a board. The objective is to strategically place cards to maximize your score while minimizing your opponent's opportunities.
+The "3 for Ten" game is a fun and engaging number placement game where players take turns placing cards numbered from 1 to 8 on a board. The objective is to strategically place cards to form combinations that sum to 10, scoring points when successful.
+
+## Rules
+- Players take turns placing cards numbered 1-8 on the board.
+- **All cards on the board count for both players** when forming combinations.
+- A combination consists of 3 cards that sum to exactly 10.
+- When a player forms a combination (horizontal, vertical, or diagonal), they earn a point.
+- Once a combination has been scored in a particular direction, those 3 cards cannot be used to score again in the same direction.
+- Each card can potentially be part of 4 different combinations: horizontal, vertical, diagonal up, and diagonal down.
+- The game ends when all cards are placed or no valid moves are left.
+- The player with the highest score wins.
 
 ## Features
 - Modular architecture with separate classes for game logic, player interactions, and board management.

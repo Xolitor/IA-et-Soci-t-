@@ -1,32 +1,72 @@
-from players.player import Player
 import random
+from game.card import Card
 
-class AIPlayer(Player):
+class AIPlayer:
+    """Represents an AI player in the Three for Ten game."""
+    
     def __init__(self, name):
-        super().__init__(name)
-
+        """
+        Initialize a new AI player.
+        
+        Args:
+            name (str): The name of the player.
+        """
+        self.id = name
+        self.available_values = []
+    
+    def initialize_cards(self, card_values):
+        """
+        Set up the available card values for the player.
+        
+        Args:
+            card_values: Range or list of available values.
+        """
+        self.available_values = list(card_values)
+    
     def make_move(self, board):
+        """
+        Determine AI player's move.
         
-        valid_positions = []
-        for row in range(len(board.grid)):
-            for col in range(len(board.grid[row])):
+        Args:
+            board: The game board.
+            
+        Returns:
+            tuple: (card, row, col) representing the AI's move.
+        """
+        print(f"\n{self.id} is thinking...")
+        
+        # Get all empty positions on the board
+        empty_positions = []
+        for row in range(board.size):
+            for col in range(board.size):
                 if board.is_valid_move(row, col):
-                    valid_positions.append((row, col))
+                    empty_positions.append((row, col))
         
-        if not valid_positions:
-            return None
+        # Choose a random empty position
+        row, col = random.choice(empty_positions)
         
+        # Choose a random card value in the allowed range (1-8)
+        value = random.choice(self.available_values)
+        card = Card(value)
         
-        row, col = random.choice(valid_positions)
+        # Simulate thinking
+        import time
+        time.sleep(1)
         
-        card_number = random.randint(1, 8)
+        print(f"{self.id} plays {card} at position ({row}, {col})")
+        return card, row, col
+    
+    def remove_card(self, card):
+        """
+        With unlimited cards, this method doesn't need to do anything.
+        """
+        pass
+    
+    def has_cards(self):
+        """
+        With unlimited cards, this method always returns True.
         
-        print(f"{self.name} plays card {card_number} at position ({row}, {col})")
-        
-        return card_number, row, col
-
-    def get_valid_moves(self, board):
-        return [card for card in self.hand if board.is_valid_move(card)]
-
-    def evaluate_moves(self, valid_moves, board):
-        return valid_moves[0]  
+        Returns:
+            bool: Always True since players have unlimited cards.
+        """
+        return True

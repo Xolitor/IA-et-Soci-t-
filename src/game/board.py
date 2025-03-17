@@ -1,13 +1,41 @@
 import colorama
 from colorama import Fore, Back, Style
+from enum import Enum, auto
 
 colorama.init(autoreset=True)
 
+class CombinationType(Enum):
+    HORIZONTAL = auto()
+    VERTICAL = auto()
+    DIAGONAL_UP = auto()
+    DIAGONAL_DOWN = auto()
+
 class Board:
-    def __init__(self, size=3):
+    """Represents the game board for the Three for Ten game."""
+    
+    def __init__(self, size=5):
+        """
+        Initialize a new game board.
+        
+        Args:
+            size (int): The size of the board (default 5x5).
+        """
         self.size = size
         self.grid = [[None for _ in range(size)] for _ in range(size)]
-        self.scored_combinations = set()
+        # Keep track of which combinations have already been scored
+        self.scored_combinations = {
+            CombinationType.HORIZONTAL: set(),
+            CombinationType.VERTICAL: set(),
+            CombinationType.DIAGONAL_UP: set(),
+            CombinationType.DIAGONAL_DOWN: set()
+        }
+        
+        # Track which cards have been used in combinations by direction
+        # This is a 2D grid where each cell contains a set of CombinationType values
+        self.card_used_in_combination = [[set() for _ in range(size)] for _ in range(size)]
+        
+        # Set fixed target sum to 10 for all board sizes
+        self.target_sum = 10
         
         self.ownership = [[None for _ in range(size)] for _ in range(size)]
         self.player_colors = {
@@ -34,117 +62,155 @@ class Board:
         """Check if the board is completely filled."""
         return all(cell is not None for row in self.grid for cell in row)
 
-    def calculate_new_points(self, player_name):
-        """Calculate new points earned by a player's most recent move."""
-        points = 0
-        new_combinations = set()
+    def check_combinations(self, player_id):
+        """
+        Check for scoring combinations for the given player.
         
-        # A optimiser 
+        Args:
+            player_id: The ID of the player to check for.
+            
+        Returns:
+            int: The number of new points scored.
+        """
+        points = 0
+        
+        # Check horizontal combinations (sliding window of 3)
         for row in range(self.size):
-            for col in range(self.size):
-
-                if self.grid[row][col] is None:
-                    continue
-
-                if col <= self.size - 3:
-                    combination = ((row, col), (row, col+1), (row, col+2))
-                    if self._is_valid_combination(combination) and self._sum_equals_ten(combination):
-                        combo_key = tuple(sorted(combination))
-                        if combo_key not in self.scored_combinations:
-                            self.scored_combinations.add(combo_key)
-                            new_combinations.add(combo_key)
-                            points += 1
-
-                if row <= self.size - 3:
-                    combination = ((row, col), (row+1, col), (row+2, col))
-                    if self._is_valid_combination(combination) and self._sum_equals_ten(combination):
-                        combo_key = tuple(sorted(combination))
-                        if combo_key not in self.scored_combinations:
-                            self.scored_combinations.add(combo_key)
-                            new_combinations.add(combo_key)
-                            points += 1
-
-                if row <= self.size - 3 and col <= self.size - 3:
-                    combination = ((row, col), (row+1, col+1), (row+2, col+2))
-                    if self._is_valid_combination(combination) and self._sum_equals_ten(combination):
-                        combo_key = tuple(sorted(combination))
-                        if combo_key not in self.scored_combinations:
-                            self.scored_combinations.add(combo_key)
-                            new_combinations.add(combo_key)
-                            points += 1
-                
-                if row >= 2 and col <= self.size - 3:
-                    combination = ((row, col), (row-1, col+1), (row-2, col+2))
-                    if self._is_valid_combination(combination) and self._sum_equals_ten(combination):
-                        combo_key = tuple(sorted(combination))
-                        if combo_key not in self.scored_combinations:
-                            self.scored_combinations.add(combo_key)
-                            new_combinations.add(combo_key)
-                            points += 1
+            for start_col in range(self.size - 2):
+                if self._check_horizontal_window(row, start_col):
+                    points += 1
+        
+        # Check vertical combinations (sliding window of 3)
+        for col in range(self.size):
+            for start_row in range(self.size - 2):
+                if self._check_vertical_window(start_row, col):
+                    points += 1
+        
+        # Check diagonal down combinations (sliding window of 3)
+        for start_row in range(self.size - 2):
+            for start_col in range(self.size - 2):
+                if self._check_diagonal_down_window(start_row, start_col):
+                    points += 1
+        
+        # Check diagonal up combinations (sliding window of 3)
+        for start_row in range(2, self.size):
+            for start_col in range(self.size - 2):
+                if self._check_diagonal_up_window(start_row, start_col):
+                    points += 1
         
         return points
 
-    def _is_valid_combination(self, combination):
-        """Check if all cells in the combination have cards."""
-        return all(0 <= r < self.size and 0 <= c < self.size and self.grid[r][c] is not None 
-                for r, c in combination)
+    def _check_horizontal_window(self, row, start_col):
+        """Check if a horizontal window of 3 cards forms a scoring combination."""
+        # Check if all 3 positions in the window have cards
+        if all(self.grid[row][start_col + i] is not None for i in range(3)):
+            # Generate a unique key for this combination
+            combo_key = (row, start_col)
+            if combo_key in self.scored_combinations[CombinationType.HORIZONTAL]:
+                return False
+            
+            # Check if any card in the window has already been used in a horizontal combination
+            if any(CombinationType.HORIZONTAL in self.card_used_in_combination[row][start_col + i] for i in range(3)):
+                return False
+            
+            # Calculate sum of cards in the window
+            window_values = [int(self.grid[row][start_col + i]) for i in range(3)]
+            window_sum = sum(window_values)
+            
+            if window_sum == 10:  # Fixed target sum of 10
+                # Mark this combination as scored
+                self.scored_combinations[CombinationType.HORIZONTAL].add(combo_key)
+                
+                # Mark each card in the window as used in a horizontal combination
+                for i in range(3):
+                    self.card_used_in_combination[row][start_col + i].add(CombinationType.HORIZONTAL)
+                
+                return True
+        return False
 
-    def _sum_equals_ten(self, combination):
-        """Check if the sum of cards in the combination equals 10."""
-        return sum(self.grid[r][c] for r, c in combination) == 10
-    
-    # def calculate_score(self, player):
-    #     """Calculate the score for a player based on the current board state."""
-    #     score = 0
-        
-    #     # Check all possible 3-in-a-row combinations
-    #     # Horizontal, vertical, and diagonal checks
-    #     for row in range(self.size):
-    #         for col in range(self.size):
-    #             # Check horizontal
-    #             if col <= self.size - 3:
-    #                 combination = ((row, col), (row, col+1), (row, col+2))
-    #                 score += self._check_combination(combination, player.name)
+    def _check_vertical_window(self, start_row, col):
+        """Check if a vertical window of 3 cards forms a scoring combination."""
+        # Check if all 3 positions in the window have cards
+        if all(self.grid[start_row + i][col] is not None for i in range(3)):
+            # Generate a unique key for this combination
+            combo_key = (start_row, col)
+            if combo_key in self.scored_combinations[CombinationType.VERTICAL]:
+                return False
+            
+            # Check if any card in the window has already been used in a vertical combination
+            if any(CombinationType.VERTICAL in self.card_used_in_combination[start_row + i][col] for i in range(3)):
+                return False
+            
+            # Calculate sum of cards in the window
+            window_values = [int(self.grid[start_row + i][col]) for i in range(3)]
+            window_sum = sum(window_values)
+            
+            if window_sum == 10:  # Fixed target sum of 10
+                # Mark this combination as scored
+                self.scored_combinations[CombinationType.VERTICAL].add(combo_key)
                 
-    #             # Check vertical
-    #             if row <= self.size - 3:
-    #                 combination = ((row, col), (row+1, col), (row+2, col))
-    #                 score += self._check_combination(combination, player.name)
+                # Mark each card in the window as used in a vertical combination
+                for i in range(3):
+                    self.card_used_in_combination[start_row + i][col].add(CombinationType.VERTICAL)
                 
-    #             # Check diagonal (down-right)
-    #             if row <= self.size - 3 and col <= self.size - 3:
-    #                 combination = ((row, col), (row+1, col+1), (row+2, col+2))
-    #                 score += self._check_combination(combination, player.name)
-                
-    #             # Check diagonal (up-right)
-    #             if row >= 2 and col <= self.size - 3:
-    #                 combination = ((row, col), (row-1, col+1), (row-2, col+2))
-    #                 score += self._check_combination(combination, player.name)
-        
-    #     return score
+                return True
+        return False
 
-    def _check_combination(self, combination, player_name):
-        """Check if a combination of three cells sums to 10 and hasn't been counted before."""
-        # Convert combination to a hashable format that includes the direction
-        sorted_combo = tuple(sorted(combination))
-        
-        # If this combination has already been counted, return 0
-        if sorted_combo in self.scored_combinations:
-            return 0
-        
-        # Check if all cells have cards
-        if any(self.grid[row][col] is None for row, col in combination):
-            return 0
-        
-        # Calculate sum of cards in the combination
-        total = sum(self.grid[row][col] for row, col in combination)
-        
-        # If sum is 10, mark as scored and return 1 point
-        if total == 10:
-            self.scored_combinations.add(sorted_combo)
-            return 1
-        
-        return 0
+    def _check_diagonal_down_window(self, start_row, start_col):
+        """Check if a diagonal down window of 3 cards forms a scoring combination."""
+        # Check if all 3 positions in the window have cards
+        if all(self.grid[start_row + i][start_col + i] is not None for i in range(3)):
+            # Generate a unique key for this combination
+            combo_key = (start_row, start_col)
+            if combo_key in self.scored_combinations[CombinationType.DIAGONAL_DOWN]:
+                return False
+            
+            # Check if any card in the window has already been used in a diagonal down combination
+            if any(CombinationType.DIAGONAL_DOWN in self.card_used_in_combination[start_row + i][start_col + i] for i in range(3)):
+                return False
+            
+            # Calculate sum of cards in the window
+            window_values = [int(self.grid[start_row + i][start_col + i]) for i in range(3)]
+            window_sum = sum(window_values)
+            
+            if window_sum == 10:  # Fixed target sum of 10
+                # Mark this combination as scored
+                self.scored_combinations[CombinationType.DIAGONAL_DOWN].add(combo_key)
+                
+                # Mark each card in the window as used in a diagonal down combination
+                for i in range(3):
+                    self.card_used_in_combination[start_row + i][start_col + i].add(CombinationType.DIAGONAL_DOWN)
+                
+                return True
+        return False
+
+    def _check_diagonal_up_window(self, start_row, start_col):
+        """Check if a diagonal up window of 3 cards forms a scoring combination."""
+        # Check if all 3 positions in the window have cards
+        if all(self.grid[start_row - i][start_col + i] is not None for i in range(3)):
+            # Generate a unique key for this combination
+            combo_key = (start_row, start_col)
+            if combo_key in self.scored_combinations[CombinationType.DIAGONAL_UP]:
+                return False
+            
+            # Check if any card in the window has already been used in a diagonal up combination
+            if any(CombinationType.DIAGONAL_UP in self.card_used_in_combination[start_row - i][start_col + i] for i in range(3)):
+                return False
+            
+            # Calculate sum of cards in the window
+            window_values = [int(self.grid[start_row - i][start_col + i]) for i in range(3)]
+            window_sum = sum(window_values)
+            
+            if window_sum == 10:  # Fixed target sum of 10
+                # Mark this combination as scored
+                self.scored_combinations[CombinationType.DIAGONAL_UP].add(combo_key)
+                
+                # Mark each card in the window as used in a diagonal up combination
+                for i in range(3):
+                    self.card_used_in_combination[start_row - i][start_col + i].add(CombinationType.DIAGONAL_UP)
+                
+                return True
+        return False
 
     def __str__(self):
         """Create an enhanced visual representation of the board."""
@@ -167,7 +233,17 @@ class Board:
                 else:
                     player_name = self.ownership[i][col]
                     color = self.player_colors.get(player_name, self.default_color)
-                    row_cells.append(f"{color}{cell:2}{Style.RESET_ALL}")
+                    
+                    # Add symbols to indicate which combinations the card has been used in
+                    card_str = str(cell)
+                    used_in = self.card_used_in_combination[i][col]
+                    
+                    # You can use special characters or formatting to indicate scored directions
+                    # Here we'll add a background color
+                    if used_in:
+                        row_cells.append(f"{color}{Back.YELLOW}{card_str:2}{Style.RESET_ALL}")
+                    else:
+                        row_cells.append(f"{color}{card_str:2}{Style.RESET_ALL}")
             
             row_str = f"{i:2}| " + " ".join(row_cells) + " |"
             result.append(row_str)
@@ -176,17 +252,47 @@ class Board:
         result.append(separator)
         
         return "\n".join(result)
-
+    
     def highlight_combinations(self):
         """Display the board with highlighted scoring combinations."""
         # Create a copy of the grid for highlighting
         highlighted_grid = [row[:] for row in self.grid]
         
-        # Highlight all combinations that sum to 10
-        for combo in self.scored_combinations:
-            for row, col in combo:
-                highlighted_grid[row][col] = f"*{self.grid[row][col]}*"
-                
+        # Build a helper grid to show which combinations each cell is part of
+        combination_grid = [[[] for _ in range(self.size)] for _ in range(self.size)]
+        
+        # Add horizontal combinations
+        for row in range(self.size):
+            for start_col in range(self.size - 2):
+                combo_key = (row, start_col)
+                if combo_key in self.scored_combinations[CombinationType.HORIZONTAL]:
+                    for i in range(3):
+                        combination_grid[row][start_col + i].append(CombinationType.HORIZONTAL)
+        
+        # Add vertical combinations
+        for col in range(self.size):
+            for start_row in range(self.size - 2):
+                combo_key = (start_row, col)
+                if combo_key in self.scored_combinations[CombinationType.VERTICAL]:
+                    for i in range(3):
+                        combination_grid[start_row + i][col].append(CombinationType.VERTICAL)
+        
+        # Add diagonal down combinations
+        for start_row in range(self.size - 2):
+            for start_col in range(self.size - 2):
+                combo_key = (start_row, start_col)
+                if combo_key in self.scored_combinations[CombinationType.DIAGONAL_DOWN]:
+                    for i in range(3):
+                        combination_grid[start_row + i][start_col + i].append(CombinationType.DIAGONAL_DOWN)
+        
+        # Add diagonal up combinations
+        for start_row in range(2, self.size):
+            for start_col in range(self.size - 2):
+                combo_key = (start_row, start_col)
+                if combo_key in self.scored_combinations[CombinationType.DIAGONAL_UP]:
+                    for i in range(3):
+                        combination_grid[start_row - i][start_col + i].append(CombinationType.DIAGONAL_UP)
+        
         # Return a string representation with highlights
         result = []
         
@@ -199,18 +305,18 @@ class Board:
         result.append(separator)
         
         # Add rows with numbers and highlighted combinations
-        for i, row in enumerate(highlighted_grid):
+        for i, row in enumerate(self.grid):
             row_cells = []
             for col, cell in enumerate(row):
-                if highlighted_grid[i][col] is None:
+                if cell is None:
                     row_cells.append("  ")
-                elif isinstance(cell, str) and cell.startswith("*"):
-                    # This is a highlighted cell
-                    value = cell.strip("*")
+                elif combination_grid[i][col]:
+                    # This card is part of at least one combination
                     player_name = self.ownership[i][col]
                     color = self.player_colors.get(player_name, self.default_color)
-                    row_cells.append(f"{color}{Back.YELLOW}{value:2}{Style.RESET_ALL}")
+                    row_cells.append(f"{color}{Back.YELLOW}{cell:2}{Style.RESET_ALL}")
                 else:
+                    # Regular card display
                     player_name = self.ownership[i][col]
                     color = self.player_colors.get(player_name, self.default_color)
                     row_cells.append(f"{color}{cell:2}{Style.RESET_ALL}")
@@ -220,5 +326,9 @@ class Board:
         
         # Add final horizontal separator
         result.append(separator)
+        
+        # Add legend
+        result.append("\nLegend:")
+        result.append(f"{Back.YELLOW} # {Style.RESET_ALL}: Part of a scoring combination")
         
         return "\n".join(result)

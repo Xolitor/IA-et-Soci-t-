@@ -1,78 +1,116 @@
 import os
 import time
-## carte compte pour les deux joueurs
-## une carte peux compter 4 fois donc seulement compter la nouvelle fois qu'elle est joué
+from .board import Board
+from .card import Card
+
 class Game:
-    def __init__(self):
-        self.players = []
-        self.current_turn = 0
-        self.board = None
-        self.scores = {}
-
-    def add_player(self, player):
-        self.players.append(player)
-        self.scores[player.name] = 0
-
-    def start_game(self):
-        self.initialize_board()
-        while not self.is_game_over():
-            self.play_turn()
-        self.declare_winner()
-
-    def initialize_board(self):
-        from .board import Board
-        self.board = Board()
-        self.display_game_state()
-
+    """Manages the Three for Ten game flow."""
+    
+    def __init__(self, player1, player2, board_size):
+        """
+        Initialize a new game with the specified players.
+        
+        Args:
+            player1: The first player.
+            player2: The second player.
+            board_size (int): The size of the game board.
+        """
+        self.board = Board(size=board_size)
+        self.players = [player1, player2]
+        self.current_player_idx = 0
+        self.scores = {player1.id: 0, player2.id: 0}
+        
+        # Initialize players with information about available cards (1-8 only)
+        player1.initialize_cards(range(1, 9))
+        player2.initialize_cards(range(1, 9))
+    
     def play_turn(self):
-        current_player = self.players[self.current_turn]
+        """
+        Play a single turn of the game.
         
-        print(f"\n{current_player.name}'s turn")
+        Returns:
+            bool: True if the game continues, False if it's over.
+        """
+        current_player = self.players[self.current_player_idx]
         
-        card, row, col = current_player.make_move(self.board)
-        
-        self.board.place_card(row, col, card, current_player.name)
-        previous_score = self.scores[current_player.name]
-        self.update_score(current_player)
-        points_earned = self.scores[current_player.name] - previous_score
-        
-        self.display_game_state()
-        
-        if points_earned > 0:
-            print(f"{current_player.name} earned {points_earned} point(s)!")
-            
-        self.current_turn = (self.current_turn + 1) % len(self.players)
-        time.sleep(1)  
-
-    # def update_score(self, player):
-    #     self.scores[player.name] = self.board.calculate_score(player)
-        
-    def update_score(self, player):
-        new_points = self.board.calculate_new_points(player.name)
-        self.scores[player.name] += new_points
-        return new_points
-
-    def is_game_over(self):
-        return self.board.is_full() or any(score >= 10 for score in self.scores.values())
-
-    def declare_winner(self):
-        winner = max(self.scores, key=self.scores.get)
-        score = self.scores[winner]
-        print("\n" + "=" * 40)
-        print(f"Game Over! The winner is {winner} with a score of {score}!")
-        print("=" * 40)
-
-    def display_game_state(self):
+        # Clear screen for better user experience
         os.system('cls' if os.name == 'nt' else 'clear')
         
-        print("\n" + "=" * 40)
-        print("3 FOR 10 GAME".center(40))
-        print("=" * 40 + "\n")
+        # Print current game state
+        self.print_game_state()
         
-        print("SCORES:")
-        for player, score in self.scores.items():
-            print(f"  {player}: {score}")
-        print()
-
+        # Ask the current player for their move
+        card, row, col = current_player.make_move(self.board)
+        
+        # Place the card on the board
+        if self.board.place_card(row, col, card, current_player.id):
+            # Check for combinations and update scores
+            points = self.board.check_combinations(current_player.id)
+            self.scores[current_player.id] += points
+            if points > 0:
+                print(f"{current_player.id} scored {points} point(s)!")
+                print("\nScoring combinations:")
+                print(self.board.highlight_combinations())
+                time.sleep(2)  # Give the user more time to see the scoring
+            
+            # Switch to the next player
+            self.current_player_idx = (self.current_player_idx + 1) % len(self.players)
+            
+            return True
+        else:
+            print(f"Invalid move by {current_player.id}: {card} at ({row}, {col})")
+            time.sleep(2)  # Give the user time to see the error
+            return True  # Let the player try again
+    
+    def is_game_over(self):
+        """
+        Check if the game is over.
+        
+        Returns:
+            bool: True if the game is over, False otherwise.
+        """
+        # Game is over only when the board is full
+        return self.board.is_full()
+    
+    def declare_winner(self):
+        """Announce the winner of the game."""
+        winner = self.get_winner()
+        print("\n" + "=" * 30)
+        print("Game Over!")
+        
+        if winner:
+            print(f"{winner.id} wins with {self.scores[winner.id]} points!")
+        else:
+            # It's a tie, find the tied players
+            max_score = max(self.scores.values())
+            tied_players = [player.id for player in self.players if self.scores[player.id] == max_score]
+            print(f"It's a tie between {', '.join(tied_players)} with {max_score} points each!")
+        
+        print("Final scores:")
+        for player in self.players:
+            print(f"{player.id}: {self.scores[player.id]} points")
+        print("=" * 30)
+    
+    def get_winner(self):
+        """
+        Determine the winner of the game.
+        
+        Returns:
+            The player who won, or None if it's a tie.
+        """
+        max_score = max(self.scores.values())
+        winners = [player for player in self.players if self.scores[player.id] == max_score]
+        
+        if len(winners) == 1:
+            return winners[0]
+        return None  # It's a tie
+    
+    def print_game_state(self):
+        """Print the current state of the game."""
+        print("\n" + "=" * 30)
+        print(f"Current player: {self.players[self.current_player_idx].id}")
+        print(f"Scores: {self.scores}")
+        print("Target sum: 10")  # Fixed target sum of 10
+        print("\nBoard:")
         print(self.board)
-        print()
+        print("=" * 30 + "\n")
