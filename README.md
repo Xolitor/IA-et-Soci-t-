@@ -73,8 +73,3 @@ three_for_ten_game
 └── requirements.txt
 ```
 
-## Contribuer
-Les contributions sont les bienvenues! Veuillez soumettre une demande de tirage ou ouvrir un problème pour toute suggestion ou amélioration.
-
-## Licence
-Ce projet est sous licence MIT. Voir le fichier LICENSE pour plus de détails.
