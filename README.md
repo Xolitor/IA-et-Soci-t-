@@ -1,44 +1,44 @@
-# Three for Ten Game
+# Jeu "3 pour 10"
 
-## Overview
-The "3 for Ten" game is a fun and engaging number placement game where players take turns placing cards numbered from 1 to 8 on a board. The objective is to strategically place cards to form combinations that sum to 10, scoring points when successful.
+## Aperçu
+Le jeu "3 pour 10" est un jeu de placement de nombres amusant et captivant où les joueurs placent à tour de rôle des cartes numérotées de 1 à 8 sur un plateau. L'objectif est de placer stratégiquement les cartes pour former des combinaisons qui totalisent 10, marquant des points lorsque vous réussissez.
 
-## Rules
-- Players take turns placing cards numbered 1-8 on the board.
-- **All cards on the board count for both players** when forming combinations.
-- A combination consists of 3 cards that sum to exactly 10.
-- When a player forms a combination (horizontal, vertical, or diagonal), they earn a point.
-- Once a combination has been scored in a particular direction, those 3 cards cannot be used to score again in the same direction.
-- Each card can potentially be part of 4 different combinations: horizontal, vertical, diagonal up, and diagonal down.
-- The game ends when all cards are placed or no valid moves are left.
-- The player with the highest score wins.
+## Règles
+- Les joueurs placent à tour de rôle des cartes numérotées de 1 à 8 sur le plateau.
+- **Toutes les cartes sur le plateau comptent pour les deux joueurs** lors de la formation de combinaisons.
+- Une combinaison se compose de 3 cartes qui totalisent exactement 10.
+- Lorsqu'un joueur forme une combinaison (horizontale, verticale ou diagonale), il gagne un point.
+- Une fois qu'une combinaison a été marquée dans une direction particulière, ces 3 cartes ne peuvent plus être utilisées pour marquer à nouveau dans la même direction.
+- Chaque carte peut potentiellement faire partie de 4 combinaisons différentes : horizontale, verticale, diagonale montante et diagonale descendante.
+- Le jeu se termine lorsque toutes les cartes sont placées ou qu'il n'y a plus de mouvements valides.
+- Le joueur avec le score le plus élevé gagne.
 
-## AI Implementation
-The game includes a sophisticated AI opponent that uses heuristic-based analysis to make strategic decisions. The AI evaluates potential moves using several factors:
+## Implémentation de l'IA
+Le jeu comprend un adversaire IA sophistiqué qui utilise une analyse basée sur des heuristiques pour prendre des décisions stratégiques. L'IA évalue les mouvements potentiels en utilisant plusieurs facteurs:
 
-### Heuristic Evaluation
-The SmartAI uses the following evaluation criteria:
-- **Immediate Scoring:** The AI prioritizes moves that create scoring combinations immediately.
-- **Future Potential:** It analyzes positions that could lead to future scoring opportunities.
-- **Blocking:** The AI actively tries to block the human player's potential scoring combinations.
-- **Positional Value:** Central positions are valued higher than edge positions, as they offer more combination possibilities.
+### Évaluation Heuristique
+L'IA Intelligente utilise les critères d'évaluation suivants:
+- **Marquage Immédiat:** L'IA privilégie les mouvements qui créent immédiatement des combinaisons gagnantes.
+- **Potentiel Futur:** Elle analyse les positions qui pourraient conduire à des opportunités de marquage futures.
+- **Blocage:** L'IA tente activement de bloquer les combinaisons potentielles du joueur humain.
+- **Valeur Positionnelle:** Les positions centrales sont valorisées plus que les positions de bord, car elles offrent plus de possibilités de combinaisons.
 
-### Decision-Making Process
-For each possible move, the AI:
-1. Creates a simulated game state
-2. Evaluates the move using weighted scoring factors
-3. Selects the move with the highest overall score
+### Processus de Prise de Décision
+Pour chaque mouvement possible, l'IA:
+1. Crée un état de jeu simulé
+2. Évalue le mouvement en utilisant des facteurs de score pondérés
+3. Sélectionne le mouvement avec le score global le plus élevé
 
-This approach allows the AI to make intelligent decisions without requiring excessive computational resources, providing a challenging opponent for human players.
+Cette approche permet à l'IA de prendre des décisions intelligentes sans nécessiter des ressources computationnelles excessives, offrant un adversaire stimulant pour les joueurs humains.
 
-## Features
-- Modular architecture with separate classes for game logic, player interactions, and board management.
-- Support for both human and AI players.
-- Score tracking and turn management.
-- Strategic AI opponent with heuristic-based decision making.
+## Fonctionnalités
+- Architecture modulaire avec des classes distinctes pour la logique du jeu, les interactions des joueurs et la gestion du plateau.
+- Support pour les joueurs humains et IA.
+- Suivi des scores et gestion des tours.
+- Adversaire IA stratégique avec prise de décision basée sur des heuristiques.
 
 ## Installation
-To set up the project, clone the repository and install the required dependencies:
+Pour configurer le projet, clonez le dépôt et installez les dépendances requises:
 
 ```bash
 git clone <repository-url>
@@ -46,16 +46,16 @@ cd three_for_ten_game
 pip install -r requirements.txt
 ```
 
-## How to Play
-1. Start the game by running the main script:
+## Comment Jouer
+1. Démarrez le jeu en exécutant le script principal:
    ```bash
    python src/main.py
    ```
-2. Players take turns placing cards on the board.
-3. The game continues until all cards are placed or no valid moves are left.
-4. The player with the highest score at the end of the game wins.
+2. Les joueurs placent à tour de rôle des cartes sur le plateau.
+3. Le jeu continue jusqu'à ce que toutes les cartes soient placées ou qu'il n'y ait plus de mouvements valides.
+4. Le joueur avec le score le plus élevé à la fin du jeu gagne.
 
-## Directory Structure
+## Structure du Répertoire
 ```
 three_for_ten_game
 ├── src
@@ -67,17 +67,14 @@ three_for_ten_game
 │   ├── players
 │   │   ├── player.py
 │   │   ├── human_player.py
-│   │   └── ai_player.py
+│   │   └── smart_ai_player.py
 │   └── utils
 │       └── constants.py
-├── tests
-│   ├── test_game.py
-│   └── test_player.py
 └── requirements.txt
 ```
 
-## Contributing
-Contributions are welcome! Please submit a pull request or open an issue for any suggestions or improvements.
+## Contribuer
+Les contributions sont les bienvenues! Veuillez soumettre une demande de tirage ou ouvrir un problème pour toute suggestion ou amélioration.
 
-## License
-This project is licensed under the MIT License. See the LICENSE file for details.
+## Licence
+Ce projet est sous licence MIT. Voir le fichier LICENSE pour plus de détails.
