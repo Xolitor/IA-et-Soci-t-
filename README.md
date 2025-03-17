@@ -13,10 +13,29 @@ The "3 for Ten" game is a fun and engaging number placement game where players t
 - The game ends when all cards are placed or no valid moves are left.
 - The player with the highest score wins.
 
+## AI Implementation
+The game includes a sophisticated AI opponent that uses heuristic-based analysis to make strategic decisions. The AI evaluates potential moves using several factors:
+
+### Heuristic Evaluation
+The SmartAI uses the following evaluation criteria:
+- **Immediate Scoring:** The AI prioritizes moves that create scoring combinations immediately.
+- **Future Potential:** It analyzes positions that could lead to future scoring opportunities.
+- **Blocking:** The AI actively tries to block the human player's potential scoring combinations.
+- **Positional Value:** Central positions are valued higher than edge positions, as they offer more combination possibilities.
+
+### Decision-Making Process
+For each possible move, the AI:
+1. Creates a simulated game state
+2. Evaluates the move using weighted scoring factors
+3. Selects the move with the highest overall score
+
+This approach allows the AI to make intelligent decisions without requiring excessive computational resources, providing a challenging opponent for human players.
+
 ## Features
 - Modular architecture with separate classes for game logic, player interactions, and board management.
 - Support for both human and AI players.
 - Score tracking and turn management.
+- Strategic AI opponent with heuristic-based decision making.
 
 ## Installation
 To set up the project, clone the repository and install the required dependencies:

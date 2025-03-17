@@ -32,7 +32,6 @@ class Card:
         """Format the card for display."""
         return format(self.value, format_spec)
     
-    # Add numeric conversion methods to support sum() and other operations
     def __int__(self):
         """Convert the card to an integer."""
         return self.value

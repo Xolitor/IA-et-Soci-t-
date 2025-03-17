@@ -19,8 +19,6 @@ class Game:
         self.players = [player1, player2]
         self.current_player_idx = 0
         self.scores = {player1.id: 0, player2.id: 0}
-        
-        # Initialize players with information about available cards (1-8 only)
         player1.initialize_cards(range(1, 9))
         player2.initialize_cards(range(1, 9))
     
@@ -32,35 +30,23 @@ class Game:
             bool: True if the game continues, False if it's over.
         """
         current_player = self.players[self.current_player_idx]
-        
-        # Clear screen for better user experience
         os.system('cls' if os.name == 'nt' else 'clear')
-        
-        # Print current game state
         self.print_game_state()
-        
-        # Ask the current player for their move
         card, row, col = current_player.make_move(self.board)
-        
-        # Place the card on the board
         if self.board.place_card(row, col, card, current_player.id):
-            # Check for combinations and update scores
             points = self.board.check_combinations(current_player.id)
             self.scores[current_player.id] += points
             if points > 0:
                 print(f"{current_player.id} scored {points} point(s)!")
                 print("\nScoring combinations:")
                 print(self.board.highlight_combinations())
-                time.sleep(2)  # Give the user more time to see the scoring
-            
-            # Switch to the next player
+                time.sleep(2)
             self.current_player_idx = (self.current_player_idx + 1) % len(self.players)
-            
             return True
         else:
             print(f"Invalid move by {current_player.id}: {card} at ({row}, {col})")
-            time.sleep(2)  # Give the user time to see the error
-            return True  # Let the player try again
+            time.sleep(2)
+            return True
     
     def is_game_over(self):
         """
@@ -69,7 +55,6 @@ class Game:
         Returns:
             bool: True if the game is over, False otherwise.
         """
-        # Game is over only when the board is full
         return self.board.is_full()
     
     def declare_winner(self):
@@ -77,15 +62,12 @@ class Game:
         winner = self.get_winner()
         print("\n" + "=" * 30)
         print("Game Over!")
-        
         if winner:
             print(f"{winner.id} wins with {self.scores[winner.id]} points!")
         else:
-            # It's a tie, find the tied players
             max_score = max(self.scores.values())
             tied_players = [player.id for player in self.players if self.scores[player.id] == max_score]
             print(f"It's a tie between {', '.join(tied_players)} with {max_score} points each!")
-        
         print("Final scores:")
         for player in self.players:
             print(f"{player.id}: {self.scores[player.id]} points")
@@ -100,17 +82,16 @@ class Game:
         """
         max_score = max(self.scores.values())
         winners = [player for player in self.players if self.scores[player.id] == max_score]
-        
         if len(winners) == 1:
             return winners[0]
-        return None  # It's a tie
+        return None
     
     def print_game_state(self):
         """Print the current state of the game."""
         print("\n" + "=" * 30)
         print(f"Current player: {self.players[self.current_player_idx].id}")
         print(f"Scores: {self.scores}")
-        print("Target sum: 10")  # Fixed target sum of 10
+        print("Target sum: 10")
         print("\nBoard:")
         print(self.board)
         print("=" * 30 + "\n")

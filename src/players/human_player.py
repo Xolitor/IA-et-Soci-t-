@@ -36,10 +36,8 @@ class HumanPlayer:
         
         while True:
             try:
-                # Display available card values
                 print(f"Available card values: {', '.join(str(v) for v in self.available_values)}")
                 
-                # Get card value from player - update prompt to show correct range
                 value = int(input(f"Enter card value ({min(self.available_values)}-{max(self.available_values)}): "))
                 if value not in self.available_values:
                     print(f"Invalid value! Please choose one of: {self.available_values}")
@@ -47,11 +45,9 @@ class HumanPlayer:
                 
                 card = Card(value)
                 
-                # Get row and column from player
                 row = int(input(f"Enter row (0-{board.size-1}): "))
                 col = int(input(f"Enter column (0-{board.size-1}): "))
                 
-                # Validate move
                 if not (0 <= row < board.size and 0 <= col < board.size):
                     print(f"Position ({row}, {col}) is outside the board! Try again.")
                     continue
